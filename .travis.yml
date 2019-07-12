@@ -1,0 +1,24 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t ttfreeman/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true USERNAME/react-test npm test
+
+after_success:
+  - docker build -t ttfreeman/multi-client ./client
+  - docker build -t ttfreeman/multi-nginx ./nginx
+  - docker build -t ttfreeman/multi-server ./server
+  - docker build -t ttfreeman/multi-worker ./worker
+  # Log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take all the production images above and push them to docker hub
+  - docker push ttfreeman/multi-client
+  - docker push ttfreeman/multi-nginx
+  - docker push ttfreeman/multi-server
+  - docker push ttfreeman/multi-worker
+ 
